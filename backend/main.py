@@ -24,7 +24,7 @@ def listar_produtos():
 
     return [{"id": 1, "nome": "Teclado"}]
 
-@app.get("/agendamentos")
+@app.get("/agendamentos2")
 
 def listar_agendamentos():
 
