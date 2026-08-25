@@ -45,21 +45,33 @@
     },
     {
       "name": "flutter",
-      "rootUri": "file:///C:/flutter/packages/flutter",
+      "rootUri": "file:///C:/srcFlutter/flutter/packages/flutter",
       "packageUri": "lib/",
-      "languageVersion": "3.10"
+      "languageVersion": "3.11"
     },
     {
       "name": "flutter_lints",
-      "rootUri": "file:///C:/Users/ADM/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_lints-4.0.0",
+      "rootUri": "file:///C:/Users/ADM/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_lints-6.0.0",
       "packageUri": "lib/",
-      "languageVersion": "3.1"
+      "languageVersion": "3.8"
     },
     {
       "name": "flutter_test",
-      "rootUri": "file:///C:/flutter/packages/flutter_test",
+      "rootUri": "file:///C:/srcFlutter/flutter/packages/flutter_test",
       "packageUri": "lib/",
-      "languageVersion": "3.10"
+      "languageVersion": "3.11"
+    },
+    {
+      "name": "http",
+      "rootUri": "file:///C:/Users/ADM/AppData/Local/Pub/Cache/hosted/pub.dev/http-1.6.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "http_parser",
+      "rootUri": "file:///C:/Users/ADM/AppData/Local/Pub/Cache/hosted/pub.dev/http_parser-4.1.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
     },
     {
       "name": "leak_tracker",
@@ -81,15 +93,15 @@
     },
     {
       "name": "lints",
-      "rootUri": "file:///C:/Users/ADM/AppData/Local/Pub/Cache/hosted/pub.dev/lints-4.0.0",
+      "rootUri": "file:///C:/Users/ADM/AppData/Local/Pub/Cache/hosted/pub.dev/lints-6.1.0",
       "packageUri": "lib/",
-      "languageVersion": "3.1"
+      "languageVersion": "3.8"
     },
     {
       "name": "matcher",
-      "rootUri": "file:///C:/Users/ADM/AppData/Local/Pub/Cache/hosted/pub.dev/matcher-0.12.19",
+      "rootUri": "file:///C:/Users/ADM/AppData/Local/Pub/Cache/hosted/pub.dev/matcher-0.12.20",
       "packageUri": "lib/",
-      "languageVersion": "3.7"
+      "languageVersion": "3.10"
     },
     {
       "name": "material_color_utilities",
@@ -99,7 +111,7 @@
     },
     {
       "name": "meta",
-      "rootUri": "file:///C:/Users/ADM/AppData/Local/Pub/Cache/hosted/pub.dev/meta-1.18.0",
+      "rootUri": "file:///C:/Users/ADM/AppData/Local/Pub/Cache/hosted/pub.dev/meta-1.18.3",
       "packageUri": "lib/",
       "languageVersion": "3.5"
     },
@@ -111,9 +123,9 @@
     },
     {
       "name": "sky_engine",
-      "rootUri": "file:///C:/flutter/bin/cache/pkg/sky_engine",
+      "rootUri": "file:///C:/srcFlutter/flutter/bin/cache/pkg/sky_engine",
       "packageUri": "lib/",
-      "languageVersion": "3.10"
+      "languageVersion": "3.11"
     },
     {
       "name": "source_span",
@@ -147,32 +159,44 @@
     },
     {
       "name": "test_api",
-      "rootUri": "file:///C:/Users/ADM/AppData/Local/Pub/Cache/hosted/pub.dev/test_api-0.7.11",
+      "rootUri": "file:///C:/Users/ADM/AppData/Local/Pub/Cache/hosted/pub.dev/test_api-0.7.12",
       "packageUri": "lib/",
-      "languageVersion": "3.7"
+      "languageVersion": "3.10"
     },
     {
-      "name": "vector_math",
-      "rootUri": "file:///C:/Users/ADM/AppData/Local/Pub/Cache/hosted/pub.dev/vector_math-2.2.0",
-      "packageUri": "lib/",
-      "languageVersion": "3.1"
-    },
-    {
-      "name": "vm_service",
-      "rootUri": "file:///C:/Users/ADM/AppData/Local/Pub/Cache/hosted/pub.dev/vm_service-15.2.0",
+      "name": "typed_data",
+      "rootUri": "file:///C:/Users/ADM/AppData/Local/Pub/Cache/hosted/pub.dev/typed_data-1.4.0",
       "packageUri": "lib/",
       "languageVersion": "3.5"
     },
     {
-      "name": "robotica_educacional",
-      "rootUri": "../",
+      "name": "vector_math",
+      "rootUri": "file:///C:/Users/ADM/AppData/Local/Pub/Cache/hosted/pub.dev/vector_math-2.4.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.10"
+    },
+    {
+      "name": "vm_service",
+      "rootUri": "file:///C:/Users/ADM/AppData/Local/Pub/Cache/hosted/pub.dev/vm_service-15.3.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
+      "name": "web",
+      "rootUri": "file:///C:/Users/ADM/AppData/Local/Pub/Cache/hosted/pub.dev/web-1.1.1",
       "packageUri": "lib/",
       "languageVersion": "3.4"
+    },
+    {
+      "name": "checklist_robotica",
+      "rootUri": "../",
+      "packageUri": "lib/",
+      "languageVersion": "3.13"
     }
   ],
   "generator": "pub",
-  "generatorVersion": "3.12.2",
-  "flutterRoot": "file:///C:/flutter",
-  "flutterVersion": "3.44.9",
+  "generatorVersion": "3.13.0",
+  "flutterRoot": "file:///C:/srcFlutter/flutter",
+  "flutterVersion": "3.47.0",
   "pubCache": "file:///C:/Users/ADM/AppData/Local/Pub/Cache"
 }
