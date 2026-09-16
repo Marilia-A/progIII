@@ -1,10 +1,16 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from ..database import get_db
+from ..seguranca import get_current_user
 from . import service
 from .schemas import AtividadeAtualizar, AtividadeCriar, AtividadePublico
 
-router = APIRouter(prefix="/atividades", tags=["Atividades"])
+# A porta trancada: uma linha, e todas as rotas de atividades passam a exigir um token valido. Sem ele, o FastAPI responde 401 antes de a rota rodar.
+router = APIRouter(
+    prefix="/atividades",
+    tags=["Atividades"],
+    dependencies=[Depends(get_current_user)],
+)
 
 @router.get("/", response_model=list[AtividadePublico])
 def listar(db: Session = Depends(get_db)):
