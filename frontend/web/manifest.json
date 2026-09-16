@@ -1,6 +1,6 @@
 {
-    "name": "robotica_educacional",
-    "short_name": "robotica_educacional",
+    "name": "checklist_robotica",
+    "short_name": "checklist_robotica",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

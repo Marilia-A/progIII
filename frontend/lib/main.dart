@@ -1,19 +1,22 @@
-import 'package:srcFlutter/material.dart';
-
+import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
-import 'theme/app_theme.dart';
 
-void main() => runApp(const RoboticaApp());
+void main() {
+  runApp(const MeuApp());
+}
 
-class RoboticaApp extends StatelessWidget {
-  const RoboticaApp({super.key});
+class MeuApp extends StatelessWidget {
+  const MeuApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "Robótica Educacional",
+      title: 'Checklist de Robótica',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+        useMaterial3: true,
+      ),
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
       home: const LoginScreen(),
     );
   }

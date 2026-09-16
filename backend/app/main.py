@@ -1,5 +1,32 @@
-from fastapi import FastAPI
-from .atividade import controller as atividade_controller
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
-app = FastAPI(title="API Checklist de Robotica", version="0.1.0")
+from .database import Base, engine
+from .atividade import controller as atividade_controller
+from .atividade.erros import ErroDeAtividade, AtividadeNaoEncontrada
+from .usuarios import controller as usuarios_controller
+from .usuarios.erros import CredenciaisInvalidas, ErroDeUsuario
+
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI(title="Checklist de Robotica", version="0.4.0")
+
+app.include_router(usuarios_controller.router)
 app.include_router(atividade_controller.router)
+
+
+@app.exception_handler(ErroDeAtividade)
+def traduzir_recusa(request: Request, erro: ErroDeAtividade):
+    codigo = 404 if isinstance(erro, AtividadeNaoEncontrada) else 409
+    return JSONResponse(status_code=codigo, content={"detail": str(erro)})
+
+
+@app.exception_handler(ErroDeUsuario)
+def traduzir_recusa_de_usuario(request: Request, erro: ErroDeUsuario):
+    if isinstance(erro, CredenciaisInvalidas):
+        return JSONResponse(
+            status_code=401,
+            content={"detail": str(erro)},
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return JSONResponse(status_code=409, content={"detail": str(erro)})
