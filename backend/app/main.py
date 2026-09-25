@@ -1,15 +1,14 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from .database import Base, engine
 from .atividade import controller as atividade_controller
 from .atividade.erros import ErroDeAtividade, AtividadeNaoEncontrada
 from .usuarios import controller as usuarios_controller
 from .usuarios.erros import CredenciaisInvalidas, ErroDeUsuario
 
-Base.metadata.create_all(bind=engine)
+# Tabelas criadas/alteradas pelo Alembic: poetry run alembic upgrade head
 
-app = FastAPI(title="Checklist de Robotica", version="0.4.0")
+app = FastAPI(title="Checklist de Robotica", version="0.5.0")
 
 app.include_router(usuarios_controller.router)
 app.include_router(atividade_controller.router)
