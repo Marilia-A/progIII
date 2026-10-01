@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
+import 'repositories/usuario_repository.dart';
 import 'screens/login_screen.dart';
+import 'services/sessao_service.dart';
 
 void main() {
-  runApp(const MeuApp());
+  final sessao = SessaoService(UsuarioRepository());
+  runApp(ChecklistApp(sessao: sessao));
 }
 
-class MeuApp extends StatelessWidget {
-  const MeuApp({super.key});
+class ChecklistApp extends StatelessWidget {
+  const ChecklistApp({super.key, required this.sessao});
+
+  final SessaoService sessao;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Checklist de Robótica',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-        useMaterial3: true,
-      ),
       debugShowCheckedModeBanner: false,
-      home: const LoginScreen(),
+      theme: ThemeData(colorSchemeSeed: Colors.indigo),
+      home: LoginScreen(sessao: sessao),
     );
   }
 }

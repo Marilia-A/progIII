@@ -7,6 +7,7 @@ API FastAPI do checklist de atividades de robótica educacional. Cada atividade 
 - PostgreSQL rodando, com um banco `checklist_robotica` criado
 
 ## Rodar do zero
+Dentro de `backend/`:
 ```
 poetry install
 ```
@@ -21,6 +22,9 @@ poetry run uvicorn app.main:app --reload
 ```
 Abra http://127.0.0.1:8000/docs
 
+## CORS
+A API aceita pedidos de `localhost` e `127.0.0.1` em qualquer porta, para o app Flutter no navegador conseguir falar com ela.
+
 ## O que testar no /docs
 1. `POST /usuarios/` cria a conta; **Authorize** com e-mail e senha
 2. `POST /atividades/` → 201 com `dono_id` preenchido pelo token
@@ -33,4 +37,4 @@ Abra http://127.0.0.1:8000/docs
 - `app/atividade/` — models, schemas, repository, service, controller, erros
 - `app/usuarios/` — cadastro, login JWT
 - `app/seguranca.py` — hash e token
-- `docs/regras-de-negocio.md` — RN01 a RN05
+- `app/main.py` — monta a API, o CORS e os tradutores de erro
