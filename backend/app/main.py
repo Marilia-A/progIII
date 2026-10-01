@@ -5,10 +5,18 @@ from .atividade import controller as atividade_controller
 from .atividade.erros import ErroDeAtividade, AtividadeNaoEncontrada
 from .usuarios import controller as usuarios_controller
 from .usuarios.erros import CredenciaisInvalidas, ErroDeUsuario
+from fastapi.middleware.cors import CORSMiddleware
 
 # Tabelas criadas/alteradas pelo Alembic: poetry run alembic upgrade head
 
 app = FastAPI(title="Checklist de Robotica", version="0.5.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(usuarios_controller.router)
 app.include_router(atividade_controller.router)

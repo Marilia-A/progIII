@@ -1,109 +1,126 @@
 import 'package:flutter/material.dart';
+import '../services/sessao_service.dart';
 import 'cadastro_screen.dart';
-import 'listagem_screen.dart';
+import 'inicio_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, required this.sessao});
+
+  final SessaoService sessao;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _senhaController = TextEditingController();
-  String? _erro;
-  bool _carregando = false;
+  final email = TextEditingController();
+  final senha = TextEditingController();
+  bool carregando = false;
+  String? erro;
 
-  void _entrar() async {
-    if (!_formKey.currentState!.validate()) return;
-
+  Future<void> entrar() async {
     setState(() {
-      _carregando = true;
-      _erro = null;
+      carregando = true;
+      erro = null;
     });
-
-    // Login real vem depois (autenticação ainda não integrada)
-    await Future.delayed(const Duration(seconds: 1));
-
-    setState(() => _carregando = false);
-
+    try {
+      await widget.sessao.entrar(email.text, senha.text);
+    } on ErroDeLogin catch (e) {
+      setState(() {
+        carregando = false;
+        erro = e.mensagem;
+      });
+      return;
+    }
     if (!mounted) return;
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => const ListagemScreen()),
+      MaterialPageRoute(
+        builder: (context) => InicioScreen(sessao: widget.sessao),
+      ),
     );
+  }
+
+  @override
+  void dispose() {
+    email.dispose();
+    senha.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
+      appBar: AppBar(title: const Text('Checklist de Robótica')),
+      body: Center(
+        child: SingleChildScrollView(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 400),
+            padding: const EdgeInsets.all(24),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  'Checklist de Robótica',
-                  style: Theme.of(context).textTheme.headlineSmall,
+                const Icon(Icons.precision_manufacturing, size: 72),
+                const SizedBox(height: 8),
+                const Text(
+                  'Entrar',
                   textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 32),
-                TextFormField(
-                  controller: _emailController,
+                const SizedBox(height: 24),
+                TextField(
+                  controller: email,
                   decoration: const InputDecoration(
                     labelText: 'E-mail',
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.emailAddress,
-                  validator: (valor) {
-                    if (valor == null || valor.isEmpty) return 'Informe o e-mail';
-                    if (!valor.contains('@')) return 'E-mail inválido';
-                    return null;
-                  },
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _senhaController,
+                TextField(
+                  controller: senha,
                   decoration: const InputDecoration(
                     labelText: 'Senha',
                     border: OutlineInputBorder(),
                   ),
                   obscureText: true,
-                  validator: (valor) {
-                    if (valor == null || valor.isEmpty) return 'Informe a senha';
-                    return null;
-                  },
                 ),
-                if (_erro != null) ...[
-                  const SizedBox(height: 12),
-                  Text(_erro!, style: const TextStyle(color: Colors.red)),
+                if (erro != null) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    erro!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.red),
+                  ),
                 ],
                 const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: _carregando ? null : _entrar,
-                  child: _carregando
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Entrar'),
+                ElevatedButton(
+                  onPressed: carregando ? null : entrar,
+                  child: Text(carregando ? 'Entrando...' : 'Entrar'),
                 ),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const CadastroScreen()),
-                    );
-                  },
-                  child: const Text('Não tem conta? Cadastre-se'),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {},
+                        child: const Text('Esqueci a senha'),
+                      ),
+                    ),
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CadastroScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text('Criar uma conta'),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
