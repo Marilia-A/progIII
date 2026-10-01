@@ -1,5 +1,6 @@
 import enum
-from sqlalchemy import Boolean, Column, Date, Enum as SqlEnum, Integer, String
+from sqlalchemy import Boolean, Column, Date, Enum as SqlEnum, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
 from ..database import Base
 
 class CategoriaAtividade(str, enum.Enum):
@@ -15,4 +16,5 @@ class Atividade(Base):
     categoria = Column(SqlEnum(CategoriaAtividade), nullable=False)
     concluida = Column(Boolean, nullable=False, default=False)
     data_prevista = Column(Date, nullable=True)
-    aluno_id = Column(Integer, nullable=True)
+    dono_id = Column(Integer, ForeignKey("usuarios.id", name="fk_atividades_dono"), nullable=True)
+    dono = relationship("Usuario", back_populates="atividades")
