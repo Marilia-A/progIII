@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../routes.dart';
 import '../services/sessao_service.dart';
-import 'cadastro_screen.dart';
-import 'inicio_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, required this.sessao});
-
-  final SessaoService sessao;
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -24,7 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
       erro = null;
     });
     try {
-      await widget.sessao.entrar(email.text, senha.text);
+      await context.read<SessaoService>().entrar(email.text, senha.text);
     } on ErroDeLogin catch (e) {
       setState(() {
         carregando = false;
@@ -33,12 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
     if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => InicioScreen(sessao: widget.sessao),
-      ),
-    );
+    Navigator.pushReplacementNamed(context, AppRoutes.inicio);
   }
 
   @override
@@ -110,12 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Expanded(
                       child: TextButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const CadastroScreen(),
-                            ),
-                          );
+                          Navigator.pushNamed(context, AppRoutes.cadastro);
                         },
                         child: const Text('Criar uma conta'),
                       ),
