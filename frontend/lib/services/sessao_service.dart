@@ -7,6 +7,11 @@ class ErroDeLogin implements Exception {
   final String mensagem;
 }
 
+class ErroDeCadastro implements Exception {
+  ErroDeCadastro(this.mensagem);
+  final String mensagem;
+}
+
 class SessaoService extends ChangeNotifier {
   SessaoService(this.repositorio);
 
@@ -36,6 +41,25 @@ class SessaoService extends ChangeNotifier {
     token = recebido;
     usuario = quem;
     notifyListeners();
+  }
+
+  Future<void> cadastrar(String nome, String email, String senha) async {
+    if (nome.isEmpty || email.isEmpty || senha.isEmpty) {
+      throw ErroDeCadastro('Preencha o nome, o e-mail e a senha');
+    }
+    try {
+      await repositorio.cadastrar(nome, email, senha);
+      await entrar(email, senha);
+    } on RecusaDaApi catch (e) {
+      if (e.status == 409) {
+        throw ErroDeCadastro('Já existe uma conta com este e-mail');
+      }
+      throw ErroDeCadastro(e.mensagem);
+    } on ErroDeLogin {
+      throw ErroDeCadastro('Conta criada, mas não consegui entrar. Tente pelo login.');
+    } catch (e) {
+      throw ErroDeCadastro('Não consegui falar com a API. O uvicorn está rodando?');
+    }
   }
 
   void sair() {
