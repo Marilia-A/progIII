@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'repositories/token_repository.dart';
 import 'repositories/usuario_repository.dart';
 import 'routes.dart';
 import 'screens/atividades_screen.dart';
@@ -10,12 +11,12 @@ import 'screens/perfil_screen.dart';
 import 'services/sessao_service.dart';
 import 'widgets/rota_protegida.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final sessao = SessaoService(UsuarioRepository(), tokens: TokenRepository());
+  await sessao.restaurar();
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => SessaoService(UsuarioRepository()),
-      child: const ChecklistApp(),
-    ),
+    ChangeNotifierProvider.value(value: sessao, child: const ChecklistApp()),
   );
 }
 
@@ -28,7 +29,7 @@ class ChecklistApp extends StatelessWidget {
       title: 'Checklist de Robótica',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(colorSchemeSeed: Colors.indigo),
-      initialRoute: AppRoutes.login,
+      initialRoute: AppRoutes.inicio,
       routes: {
         AppRoutes.login: (context) => const LoginScreen(),
         AppRoutes.cadastro: (context) => const CadastroScreen(),
