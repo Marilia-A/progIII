@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/usuario.dart';
+import '../repositories/token_repository.dart';
 import '../repositories/usuario_repository.dart';
 
 class ErroDeLogin implements Exception {
@@ -13,9 +14,11 @@ class ErroDeCadastro implements Exception {
 }
 
 class SessaoService extends ChangeNotifier {
-  SessaoService(this.repositorio);
+  SessaoService(this.repositorio, {TokenRepository? tokens})
+      : tokens = tokens ?? TokenRepository();
 
   final UsuarioRepository repositorio;
+  final TokenRepository tokens;
   String? token;
   Usuario? usuario;
 
@@ -40,6 +43,7 @@ class SessaoService extends ChangeNotifier {
     }
     token = recebido;
     usuario = quem;
+    await tokens.salvar(recebido);
     notifyListeners();
   }
 
@@ -62,7 +66,24 @@ class SessaoService extends ChangeNotifier {
     }
   }
 
-  void sair() {
+  Future<void> restaurar() async {
+    final guardado = await tokens.ler();
+    if (guardado == null) {
+      return;
+    }
+    try {
+      usuario = await repositorio.quemSouEu(guardado);
+      token = guardado;
+      notifyListeners();
+    } on RecusaDaApi {
+      await tokens.apagar();
+    } catch (e) {
+      // API fora do ar: o token fica guardado
+    }
+  }
+
+  Future<void> sair() async {
+    await tokens.apagar();
     token = null;
     usuario = null;
     notifyListeners();

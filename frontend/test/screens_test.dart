@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:checklist_robotica/main.dart';
 import 'package:checklist_robotica/repositories/usuario_repository.dart';
 import 'package:checklist_robotica/routes.dart';
@@ -16,7 +17,8 @@ import 'package:checklist_robotica/services/sessao_service.dart';
 
 int pedidos = 0;
 
-SessaoService sessaoDeMentira() {
+SessaoService sessaoDeMentira({Map<String, Object> guardado = const {}}) {
+  SharedPreferences.setMockInitialValues(guardado);
   final contas = {
     'ana@robotica.com': {'nome': 'Ana', 'senha': 'segredo123'},
   };
@@ -100,6 +102,11 @@ Future<void> preencherECadastrar(WidgetTester tester, String email, String senha
   await tester.enterText(find.byType(TextField).at(2), senha);
   await tester.tap(find.widgetWithText(ElevatedButton, 'Cadastrar'));
   await tester.pumpAndSettle();
+}
+
+Future<String?> tokenGuardado() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getString('token');
 }
 
 Matcher recusadoCom(String frase) {
@@ -197,6 +204,7 @@ void main() {
     await tester.tap(find.text('Ver as atividades'));
     await tester.pumpAndSettle();
     expect(find.byType(AtividadesScreen), findsOneWidget);
+    expect(await tokenGuardado(), 'token-de-ana@robotica.com');
     await abrirOMenu(tester);
     await tester.tap(find.text('Sair'));
     await tester.pumpAndSettle();
@@ -204,6 +212,16 @@ void main() {
     expect(find.byType(AtividadesScreen), findsNothing);
     expect(Navigator.of(tester.element(find.byType(LoginScreen))).canPop(), isFalse);
     expect(sessao.logado, isFalse);
+    expect(await tokenGuardado(), isNull);
+  });
+
+  testWidgets('com a sessão restaurada, o app abre direto na tela inicial', (tester) async {
+    final sessao = sessaoDeMentira(guardado: {'token': 'token-de-ana@robotica.com'});
+    await sessao.restaurar();
+    await tester.pumpWidget(appDeMentira(sessao));
+    expect(find.byType(InicioScreen), findsOneWidget);
+    expect(find.text('Olá, Ana!'), findsOneWidget);
+    expect(find.byType(LoginScreen), findsNothing);
   });
 
   testWidgets('watch redesenha a tela quando o service avisa', (tester) async {
@@ -244,7 +262,7 @@ void main() {
     expect(sessao.token, 'token-de-ana@robotica.com');
     expect(sessao.usuario?.nome, 'Ana');
     expect(avisos, 1);
-    sessao.sair();
+    await sessao.sair();
     expect(sessao.logado, isFalse);
     expect(sessao.usuario, isNull);
     expect(avisos, 2);
@@ -269,5 +287,44 @@ void main() {
       recusadoCom('senha: String should have at least 6 characters'),
     );
     expect(sessao.logado, isFalse);
+    expect(await tokenGuardado(), isNull);
+  });
+
+  test('entrar guarda o token no aparelho', () async {
+    final sessao = sessaoDeMentira();
+    await sessao.entrar('ana@robotica.com', 'segredo123');
+    expect(await tokenGuardado(), 'token-de-ana@robotica.com');
+  });
+
+  test('restaurar devolve a sessão a quem tem um token guardado', () async {
+    final sessao = sessaoDeMentira(guardado: {'token': 'token-de-ana@robotica.com'});
+    pedidos = 0;
+    await sessao.restaurar();
+    expect(sessao.logado, isTrue);
+    expect(sessao.usuario?.nome, 'Ana');
+    expect(pedidos, 1);
+  });
+
+  test('restaurar sem token guardado não pede nada à API', () async {
+    final sessao = sessaoDeMentira();
+    pedidos = 0;
+    await sessao.restaurar();
+    expect(sessao.logado, isFalse);
+    expect(pedidos, 0);
+  });
+
+  test('restaurar apaga o token que a API não aceita mais', () async {
+    final sessao = sessaoDeMentira(guardado: {'token': 'token-vencido'});
+    await sessao.restaurar();
+    expect(sessao.logado, isFalse);
+    expect(await tokenGuardado(), isNull);
+  });
+
+  test('sair apaga o token guardado no aparelho', () async {
+    final sessao = sessaoDeMentira(guardado: {'token': 'token-de-ana@robotica.com'});
+    await sessao.restaurar();
+    expect(sessao.logado, isTrue);
+    await sessao.sair();
+    expect(await tokenGuardado(), isNull);
   });
 }
