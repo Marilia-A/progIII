@@ -22,23 +22,23 @@ cd frontend
 flutter pub get
 flutter run -d chrome
 ```
-Entre com uma conta criada pelo `POST /usuarios/` do /docs.
+Crie uma conta pela tela de cadastro do app (ou pelo `POST /usuarios/` do /docs) e entre com ela.
 
 ### Testes
 ```
 cd frontend
 flutter test
 ```
-Os testes cobrem as telas de login e cadastro, o guarda de rotas, o menu lateral, o Sair e o aviso do `SessaoService`.
+Os testes cobrem as telas de login e cadastro, o cadastro com as recusas da API (409 e 422), o guarda de rotas, o menu lateral, o Sair, o aviso do `SessaoService` e o token guardado no aparelho (guardar, restaurar, apagar o token recusado e apagar no Sair). Usam uma API de mentira e um aparelho de mentira, sem precisar do uvicorn.
 
 ### Estrutura do app (em camadas, como a API)
 - `lib/screens/` — telas: login, cadastro, inicial, atividades e perfil
 - `lib/widgets/` — peças reaproveitadas: o guarda de rotas (`rota_protegida.dart`) e o menu lateral (`app_drawer.dart`)
-- `lib/services/` — regras: o login e a sessão (`SessaoService`)
-- `lib/repositories/` — o único que fala HTTP com a API
+- `lib/services/` — regras: o login, o cadastro e a sessão (`SessaoService`)
+- `lib/repositories/` — o acesso aos dados: `usuario_repository.dart` (o único que fala HTTP com a API) e `token_repository.dart` (o único que guarda o token no aparelho)
 - `lib/models/` — o formato dos dados (Usuario)
 - `lib/routes.dart` — o nome de cada tela
-- `lib/main.dart` — monta as camadas, o Provider e a tabela de rotas
+- `lib/main.dart` — monta as camadas, restaura a sessão, o Provider e a tabela de rotas
 
 ### Navegação (rotas nomeadas)
 Cada tela tem um nome em `lib/routes.dart` (`/login`, `/cadastro`, `/inicio`, `/atividades`, `/perfil`) e a tabela `routes:` do `main.dart` liga o nome à tela. A navegação é feita por `pushNamed`, `pushReplacementNamed` e `pushNamedAndRemoveUntil`.
@@ -48,7 +48,10 @@ As telas inicial, atividades e perfil passam pelo guarda `RotaProtegida`: aberta
 ### Sessão (Provider)
 O `SessaoService` é um `ChangeNotifier` que fica no topo do app (`ChangeNotifierProvider` no `main.dart`) e chama `notifyListeners()` ao entrar e ao sair. Nenhuma tela recebe a sessão pelo construtor: usa `context.read` para chamar e `context.watch` para mostrar.
 
-O token fica só na memória: recarregar a página (F5) sai do app e cai no login. Guardá-lo no aparelho é o próximo passo.
+### Cadastro e sessão guardada
+O cadastro chama `POST /usuarios/` pelas mesmas camadas do login e já entra com a conta nova. Quando a API recusa (e-mail repetido, campo inválido), a frase aparece na tela.
+
+O token fica no aparelho (`shared_preferences`, que no navegador é o `localStorage`), num repositório próprio, o `TokenRepository`. O `main` o restaura antes de abrir o app: se a API ainda o aceita, o F5 não derruba a sessão. Se a API recusar o token (401), ele é apagado; se a API estiver fora do ar, ele continua guardado. O Sair apaga o token.
 
 ## Regras de negócio
 Em [`docs/regras-de-negocio.md`](docs/regras-de-negocio.md) — RN01 a RN05.
