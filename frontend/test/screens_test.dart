@@ -14,6 +14,7 @@ import 'package:checklist_robotica/routes.dart';
 import 'package:checklist_robotica/screens/atividade_screen.dart';
 import 'package:checklist_robotica/screens/atividades_screen.dart';
 import 'package:checklist_robotica/screens/cadastro_screen.dart';
+import 'package:checklist_robotica/screens/formulario_screen.dart';
 import 'package:checklist_robotica/screens/inicio_screen.dart';
 import 'package:checklist_robotica/screens/login_screen.dart';
 import 'package:checklist_robotica/screens/perfil_screen.dart';
@@ -123,6 +124,64 @@ http.Client apiDeAtividades(int status, Object corpo) {
   });
 }
 
+// Acervo de mentira que guarda o que recebe: título repetido (RN01) e
+// atividade concluída (RN03) voltam 409, como na API de verdade.
+http.Client acervoDeMentira() {
+  final List<Map<String, dynamic>> acervo = [
+    for (final a in duasAtividades) Map<String, dynamic>.from(a),
+  ];
+  return MockClient((pedido) async {
+    pedidos++;
+    final id = int.tryParse(pedido.url.pathSegments.last);
+    if (pedido.method == 'POST' || pedido.method == 'PATCH') {
+      final dados = jsonDecode(pedido.body);
+      for (final a in acervo) {
+        if (a['titulo'] == dados['titulo'] && a['id'] != id) {
+          return http.Response(
+            '{"detail": "Ja existe uma atividade com o titulo ${dados['titulo']}"}',
+            409,
+          );
+        }
+      }
+      if (pedido.method == 'POST') {
+        final nova = {
+          'id': 3,
+          'titulo': dados['titulo'],
+          'descricao': dados['descricao'],
+          'categoria': dados['categoria'],
+          'concluida': false,
+          'data_prevista': dados['data_prevista'],
+          'dono_id': 1,
+        };
+        acervo.add(nova);
+        return http.Response(jsonEncode(nova), 201);
+      }
+    }
+    if (id == null) {
+      return http.Response(jsonEncode(acervo), 200);
+    }
+    for (final a in acervo) {
+      if (a['id'] == id) {
+        if (pedido.method == 'DELETE') {
+          if (a['concluida'] == true) {
+            return http.Response(
+              '{"detail": "Atividade $id ja foi concluida e nao pode ser apagada"}',
+              409,
+            );
+          }
+          acervo.remove(a);
+          return http.Response('', 204);
+        }
+        if (pedido.method == 'PATCH') {
+          a.addAll(jsonDecode(pedido.body));
+        }
+        return http.Response(jsonEncode(a), 200);
+      }
+    }
+    return http.Response('{"detail": "Atividade $id nao encontrada"}', 404);
+  });
+}
+
 Widget appDeMentira(SessaoService sessao, {http.Client? atividades}) {
   final repositorio = AtividadeRepository(
     cliente: atividades ?? apiDeAtividades(200, []),
@@ -163,6 +222,29 @@ Future<void> abrirAsAtividades(WidgetTester tester, http.Client atividades) asyn
   await sessao.restaurar();
   await tester.pumpWidget(appDeMentira(sessao, atividades: atividades));
   await tester.tap(find.text('Ver as atividades'));
+  await tester.pumpAndSettle();
+}
+
+Future<void> escolherCategoria(WidgetTester tester, String nome) async {
+  await tester.tap(find.byType(DropdownButtonFormField<String>));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(nome).last);
+  await tester.pumpAndSettle();
+}
+
+// Na lista aberta, toca no + e preenche o título e a categoria.
+Future<void> preencherOFormulario(WidgetTester tester, String titulo, String categoria) async {
+  await tester.tap(find.byTooltip('Nova atividade'));
+  await tester.pumpAndSettle();
+  await tester.enterText(find.byType(TextFormField).at(0), titulo);
+  await escolherCategoria(tester, categoria);
+}
+
+// No detalhe aberto, toca em Excluir e responde ao diálogo com este botão.
+Future<void> excluirRespondendo(WidgetTester tester, String resposta) async {
+  await tester.tap(find.text('Excluir'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.text(resposta)));
   await tester.pumpAndSettle();
 }
 
@@ -386,6 +468,101 @@ void main() {
     expect(find.text('Montar o circuito do LED'), findsOneWidget);
   });
 
+  // O formulário: criar, a validação nas duas pontas, editar e excluir.
+  testWidgets('o + abre o formulário vazio, e salvar põe a atividade nova na lista', (tester) async {
+    await abrirAsAtividades(tester, acervoDeMentira());
+    await preencherOFormulario(tester, 'Soldar os jumpers', 'Montagem');
+    expect(find.text('Nova atividade'), findsOneWidget);
+    await tester.tap(find.text('Salvar'));
+    await tester.pumpAndSettle();
+    expect(find.byType(FormularioScreen), findsNothing);
+    expect(find.byType(ListTile), findsNWidgets(3));
+    expect(find.text('Soldar os jumpers'), findsOneWidget);
+  });
+
+  testWidgets('o validator segura o formulário: com campo errado, nada vai para a API', (tester) async {
+    await abrirAsAtividades(tester, acervoDeMentira());
+    await tester.tap(find.byTooltip('Nova atividade'));
+    await tester.pumpAndSettle();
+    pedidos = 0;
+    await tester.tap(find.text('Salvar'));
+    await tester.pump();
+    expect(find.text('Informe o título'), findsOneWidget);
+    expect(find.text('Escolha a categoria'), findsOneWidget);
+    await tester.enterText(find.byType(TextFormField).at(0), 'Soldar os jumpers');
+    await tester.tap(find.text('Salvar'));
+    await tester.pump();
+    expect(find.text('Informe o título'), findsNothing);
+    expect(find.text('Escolha a categoria'), findsOneWidget);
+    expect(pedidos, 0);
+    expect(find.byType(FormularioScreen), findsOneWidget);
+  });
+
+  testWidgets('título repetido: a API recusa (409), e o formulário mostra a frase e fica aberto', (tester) async {
+    await abrirAsAtividades(tester, acervoDeMentira());
+    await preencherOFormulario(tester, 'Montar o circuito do LED', 'Hardware');
+    await tester.tap(find.text('Salvar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Ja existe uma atividade com o titulo Montar o circuito do LED'), findsOneWidget);
+    expect(find.byType(FormularioScreen), findsOneWidget);
+  });
+
+  testWidgets('editar: o formulário vem preenchido, e salvar volta para a lista, já atualizada', (tester) async {
+    await abrirAsAtividades(tester, acervoDeMentira());
+    await tester.tap(find.text('Montar o circuito do LED'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Editar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Editar atividade'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, 'Montar o circuito do LED'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, 'LED e resistor na porta 13'), findsOneWidget);
+    await tester.enterText(find.byType(TextFormField).at(0), 'Montar o circuito do LED verde');
+    await tester.tap(find.text('Salvar'));
+    await tester.pumpAndSettle();
+    expect(find.byType(FormularioScreen), findsNothing);
+    expect(find.byType(AtividadeScreen), findsNothing);
+    expect(find.text('Montar o circuito do LED verde'), findsOneWidget);
+    expect(find.text('Montar o circuito do LED'), findsNothing);
+  });
+
+  testWidgets('excluir pergunta antes: Cancelar deixa a atividade; Excluir a tira da lista', (tester) async {
+    await abrirAsAtividades(tester, acervoDeMentira());
+    await tester.tap(find.text('Montar o circuito do LED'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Excluir'));
+    await tester.pumpAndSettle();
+    expect(find.text('Excluir Montar o circuito do LED?'), findsOneWidget);
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.byType(AtividadeScreen), findsOneWidget);
+    await excluirRespondendo(tester, 'Excluir');
+    expect(find.byType(AtividadeScreen), findsNothing);
+    expect(find.text('Montar o circuito do LED'), findsNothing);
+    expect(find.byType(ListTile), findsOneWidget);
+  });
+
+  testWidgets('a API não deixa excluir a atividade concluída (409, RN03): o detalhe mostra a frase', (tester) async {
+    await abrirAsAtividades(tester, acervoDeMentira());
+    await tester.tap(find.text('Programar o pisca-pisca'));
+    await tester.pumpAndSettle();
+    await excluirRespondendo(tester, 'Excluir');
+    expect(find.text('Atividade 2 ja foi concluida e nao pode ser apagada'), findsOneWidget);
+    expect(find.byType(AtividadeScreen), findsOneWidget);
+  });
+
+  testWidgets('depois de um F5 no formulário (a primeira tela da pilha), ele mostra a lista', (tester) async {
+    await abrirAsAtividades(tester, acervoDeMentira());
+    Navigator.of(tester.element(find.byType(AtividadesScreen))).pushNamedAndRemoveUntil(
+      AppRoutes.formulario,
+      (rota) => false,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(FormularioScreen), findsOneWidget);
+    expect(find.text('Nova atividade'), findsNothing);
+    expect(find.text('Montar o circuito do LED'), findsOneWidget);
+  });
+
   test('service recusa campos vazios sem chamar a API', () async {
     final sessao = sessaoDeMentira();
     pedidos = 0;
@@ -496,6 +673,86 @@ void main() {
     expect(caminho, '/atividades/2');
     expect(cabecalho, 'Bearer tk-123');
     expect(atividade.titulo, 'Programar o pisca-pisca');
+  });
+
+  test('o repositório cria com POST: a atividade em JSON no corpo, e o token no cabeçalho', () async {
+    late http.Request enviado;
+    final cliente = MockClient((pedido) async {
+      enviado = pedido;
+      return http.Response(
+        jsonEncode({
+          'id': 3,
+          'titulo': 'Soldar os jumpers',
+          'descricao': null,
+          'categoria': 'montagem',
+          'concluida': false,
+          'data_prevista': '2026-10-30',
+          'dono_id': 1,
+        }),
+        201,
+      );
+    });
+    final atividade = await AtividadeRepository(cliente: cliente).criar(
+      'tk-123',
+      'Soldar os jumpers',
+      null,
+      'montagem',
+      DateTime(2026, 10, 30),
+    );
+    expect(enviado.method, 'POST');
+    expect(enviado.url.path, '/atividades/');
+    expect(enviado.headers['Authorization'], 'Bearer tk-123');
+    expect(enviado.headers['Content-Type'], startsWith('application/json'));
+    expect(jsonDecode(enviado.body), {
+      'titulo': 'Soldar os jumpers',
+      'descricao': null,
+      'categoria': 'montagem',
+      'data_prevista': '2026-10-30',
+    });
+    expect(atividade.id, 3);
+  });
+
+  test('o repositório edita com PATCH e exclui com DELETE, no endereço da atividade', () async {
+    final feitos = <String>[];
+    final cliente = MockClient((pedido) async {
+      feitos.add('${pedido.method} ${pedido.url.path}');
+      if (pedido.method == 'DELETE') {
+        return http.Response('', 204);
+      }
+      return http.Response(jsonEncode(duasAtividades.first), 200);
+    });
+    final repositorio = AtividadeRepository(cliente: cliente);
+    await repositorio.atualizar('tk-123', 1, 'Montar o circuito do LED', null, 'hardware', null);
+    await repositorio.excluir('tk-123', 1);
+    expect(feitos, ['PATCH /atividades/1', 'DELETE /atividades/1']);
+  });
+
+  test('o 422 da API vira a frase da tela: o campo e a mensagem, sem o Value error', () async {
+    final sessao = sessaoDeMentira();
+    await sessao.entrar('ana@robotica.com', 'segredo123');
+    final recusa = MockClient((pedido) async {
+      return http.Response(
+        jsonEncode({
+          'detail': [
+            {
+              'type': 'value_error',
+              'loc': ['body', 'titulo'],
+              'msg': 'Value error, o titulo precisa ter pelo menos 2 caracteres',
+            },
+          ],
+        }),
+        422,
+      );
+    });
+    final servico = AtividadeService(AtividadeRepository(cliente: recusa), sessao);
+    await expectLater(
+      servico.criar('A', null, 'hardware', null),
+      throwsA(isA<ErroDeAtividades>().having(
+        (e) => '$e',
+        'texto',
+        'titulo: o titulo precisa ter pelo menos 2 caracteres',
+      )),
+    );
   });
 
   test('o service das atividades traduz a recusa: a frase da API vai para a tela', () async {

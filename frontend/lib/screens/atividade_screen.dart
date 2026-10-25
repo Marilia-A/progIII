@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/atividade.dart';
+import '../routes.dart';
 import '../services/atividade_service.dart';
 import 'atividades_screen.dart';
 
@@ -15,6 +16,7 @@ class AtividadeScreen extends StatefulWidget {
 
 class _AtividadeScreenState extends State<AtividadeScreen> {
   late Future<Atividade> pedido;
+  String? erro;
 
   @override
   void initState() {
@@ -28,6 +30,52 @@ class _AtividadeScreenState extends State<AtividadeScreen> {
     setState(() {
       pedido = context.read<AtividadeService>().buscar(widget.id!);
     });
+  }
+
+  Future<void> editar(Atividade atividade) async {
+    final salvou = await Navigator.pushNamed(
+      context,
+      AppRoutes.formulario,
+      arguments: atividade,
+    );
+    if (salvou == true && mounted) {
+      Navigator.pop(context, true);
+    }
+  }
+
+  Future<void> excluir(Atividade atividade) async {
+    final certeza = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Excluir ${atividade.titulo}?'),
+        content: const Text(
+          'Tem certeza? A atividade sai da sua lista, e não dá para desfazer.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+    if (certeza != true || !mounted) {
+      return;
+    }
+    try {
+      await context.read<AtividadeService>().excluir(atividade.id);
+    } on ErroDeAtividades catch (e) {
+      setState(() {
+        erro = '$e';
+      });
+      return;
+    }
+    if (!mounted) return;
+    Navigator.pop(context, true);
   }
 
   @override
@@ -95,6 +143,31 @@ class _AtividadeScreenState extends State<AtividadeScreen> {
                 title: const Text('Situação'),
                 subtitle: Text(atividade.concluida ? 'Concluída' : 'Pendente'),
               ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () => editar(atividade),
+                    icon: const Icon(Icons.edit),
+                    label: const Text('Editar'),
+                  ),
+                  const SizedBox(width: 16),
+                  OutlinedButton.icon(
+                    onPressed: () => excluir(atividade),
+                    icon: const Icon(Icons.delete),
+                    label: const Text('Excluir'),
+                  ),
+                ],
+              ),
+              if (erro != null) ...[
+                const SizedBox(height: 16),
+                Text(
+                  erro!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ],
             ],
           );
         },

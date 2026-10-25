@@ -21,7 +21,7 @@ class _AtividadesScreenState extends State<AtividadesScreen> {
     atividades = context.read<AtividadeService>().listar();
   }
 
-  void tentarDeNovo() {
+  void pedirDeNovo() {
     setState(() {
       atividades = context.read<AtividadeService>().listar();
     });
@@ -53,7 +53,7 @@ class _AtividadesScreenState extends State<AtividadesScreen> {
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: tentarDeNovo,
+                    onPressed: pedirDeNovo,
                     child: const Text('Tentar de novo'),
                   ),
                 ],
@@ -75,17 +75,30 @@ class _AtividadesScreenState extends State<AtividadesScreen> {
                   '${atividade.nomeDaCategoria} · ${atividade.dataFormatada}',
                 ),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  Navigator.pushNamed(
+                onTap: () async {
+                  final mudou = await Navigator.pushNamed(
                     context,
                     AppRoutes.atividade,
                     arguments: atividade.id,
                   );
+                  if (mudou == true) {
+                    pedirDeNovo();
+                  }
                 },
               );
             },
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Nova atividade',
+        onPressed: () async {
+          final salvou = await Navigator.pushNamed(context, AppRoutes.formulario);
+          if (salvou == true) {
+            pedirDeNovo();
+          }
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }
