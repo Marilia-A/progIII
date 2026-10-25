@@ -29,10 +29,10 @@ Crie uma conta pela tela de cadastro do app (ou pelo `POST /usuarios/` do /docs)
 cd frontend
 flutter test
 ```
-Os testes cobrem as telas de login e cadastro, o cadastro com as recusas da API (409 e 422), o guarda de rotas, o menu lateral, o Sair, o aviso do `SessaoService`, o token guardado no aparelho (guardar, restaurar, apagar o token recusado e apagar no Sair), os quatro estados da lista de atividades (carregando, erro com Tentar de novo, vazia e a lista), o detalhe que busca pelo id (incluindo o 404 e o F5 sem id), o `AtividadeRepository` e o `AtividadeService`. Usam uma API de mentira e um aparelho de mentira, sem precisar do uvicorn.
+São 42 testes. Cobrem as telas de login e cadastro, o cadastro com as recusas da API (409 e 422), o guarda de rotas, o menu lateral, o Sair, o aviso do `SessaoService`, o token guardado no aparelho (guardar, restaurar, apagar o token recusado e apagar no Sair), os quatro estados da lista de atividades (carregando, erro com Tentar de novo, vazia e a lista), o detalhe que busca pelo id (incluindo o 404 e o F5 sem id), o formulário (criar, editar, o `validator` segurando o envio, o 409 do título repetido e o F5 no formulário), o diálogo de excluir (Cancelar e Excluir), o 409 da atividade concluída, o `AtividadeRepository` (GET, POST, PATCH e DELETE) e o `AtividadeService` (incluindo a tradução do 422). Usam uma API de mentira e um aparelho de mentira, sem precisar do uvicorn.
 
 ### Estrutura do app (em camadas, como a API)
-- `lib/screens/` — telas: login, cadastro, inicial, atividades (a lista), atividade (o detalhe) e perfil
+- `lib/screens/` — telas: login, cadastro, inicial, atividades (a lista), atividade (o detalhe), formulário (criar e editar) e perfil
 - `lib/widgets/` — peças reaproveitadas: o guarda de rotas (`rota_protegida.dart`) e o menu lateral (`app_drawer.dart`)
 - `lib/services/` — regras: o login, o cadastro e a sessão (`SessaoService`) e as atividades (`AtividadeService`)
 - `lib/repositories/` — o acesso aos dados: `usuario_repository.dart` e `atividade_repository.dart` (os únicos que falam HTTP com a API) e `token_repository.dart` (o único que guarda o token no aparelho)
@@ -41,9 +41,9 @@ Os testes cobrem as telas de login e cadastro, o cadastro com as recusas da API 
 - `lib/main.dart` — monta as camadas, restaura a sessão, os Providers e a tabela de rotas
 
 ### Navegação (rotas nomeadas)
-Cada tela tem um nome em `lib/routes.dart` (`/login`, `/cadastro`, `/inicio`, `/atividades`, `/atividade`, `/perfil`) e a tabela `routes:` do `main.dart` liga o nome à tela. A navegação é feita por `pushNamed`, `pushReplacementNamed` e `pushNamedAndRemoveUntil`.
+Cada tela tem um nome em `lib/routes.dart` (`/login`, `/cadastro`, `/inicio`, `/atividades`, `/atividade`, `/formulario`, `/perfil`) e a tabela `routes:` do `main.dart` liga o nome à tela. A navegação é feita por `pushNamed`, `pushReplacementNamed` e `pushNamedAndRemoveUntil`.
 
-As telas inicial, atividades, atividade e perfil passam pelo guarda `RotaProtegida`: abertas sem sessão, mostram o login. Toda tela principal tem o menu lateral, com o nome e o e-mail de quem entrou, e o Sair, que apaga a sessão e limpa a pilha de telas.
+As telas inicial, atividades, atividade, formulário e perfil passam pelo guarda `RotaProtegida`: abertas sem sessão, mostram o login. Toda tela principal tem o menu lateral, com o nome e o e-mail de quem entrou, e o Sair, que apaga a sessão e limpa a pilha de telas.
 
 ### Sessão (Provider)
 O `SessaoService` é um `ChangeNotifier` que fica no topo do app e chama `notifyListeners()` ao entrar e ao sair. O `main.dart` usa um `MultiProvider`: o `ChangeNotifierProvider` da sessão e o `Provider` do `AtividadeService`. Nenhuma tela recebe a sessão pelo construtor: usa `context.read` para chamar e `context.watch` para mostrar.
@@ -57,6 +57,11 @@ O token fica no aparelho (`shared_preferences`, que no navegador é o `localStor
 A tela de atividades chama `GET /atividades/` pelas camadas do app (tela, `AtividadeService`, `AtividadeRepository`), com o token no cabeçalho, e mostra só as atividades de quem está logado. O pedido nasce uma vez, no `initState`, e um `FutureBuilder` com `ListView.builder` mostra um de quatro estados: carregando, erro (com Tentar de novo), lista vazia e a lista.
 
 Tocar numa atividade abre o detalhe pela rota `/atividade`, com o id nos `arguments`: o detalhe busca a atividade na API (`GET /atividades/{id}`), para mostrar o dado de agora, com os mesmos estados da lista. Sem o id (depois de um F5), a tela mostra a lista.
+
+### Criar, editar e excluir pelo app
+O app cria, edita e exclui atividades pelas camadas (tela, `AtividadeService`, `AtividadeRepository`), com o token no cabeçalho: `POST /atividades/`, `PATCH /atividades/{id}` e `DELETE /atividades/{id}`. Um formulário só (`FormularioScreen`) serve para criar (aberto pelo + da lista, vazio) e para editar (aberto pelo Editar do detalhe, já preenchido), com título, descrição, categoria (dropdown) e data prevista (seletor de data). O campo `concluida` não vai no formulário por causa da RN02.
+
+A validação acontece nas duas pontas: o `validator` de cada campo antes de enviar (título obrigatório, categoria escolhida, descrição até 500 caracteres), e a API, que confere tudo de novo e recusa com 422 (campo inválido) ou 409 (RN01, título repetido; RN03, atividade concluída não pode ser excluída). A frase da API aparece em vermelho, e a tela fica aberta. Excluir pede confirmação num diálogo (`showDialog`). Depois de cada operação, a tela fecha com `true`, e a lista pede as atividades de novo.
 
 ## Regras de negócio
 Em [`docs/regras-de-negocio.md`](docs/regras-de-negocio.md) — RN01 a RN05.
