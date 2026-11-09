@@ -32,9 +32,17 @@ A API aceita pedidos de `localhost` e `127.0.0.1` em qualquer porta, para o app 
 4. Título com 1 caractere → 422 com mensagem em português
 5. Outro usuário: `GET /atividades/` → `[]`; `GET /atividades/1` → 404
 
+## Testes
+Não precisa do uvicorn nem do `.env`:
+```
+poetry run pytest
+```
+O `conftest.py` troca o banco por um SQLite só do teste (`teste.db`, fora do Git), que nasce vazio e é apagado a cada teste. Os testes ficam em `tests/test_atividades.py`.
+
 ## Estrutura
 - `alembic/versions/` — histórico do banco (2 migrações)
 - `app/atividade/` — models, schemas, repository, service, controller, erros
 - `app/usuarios/` — cadastro, login JWT
 - `app/seguranca.py` — hash e token
 - `app/main.py` — monta a API, o CORS e os tradutores de erro
+- `conftest.py` e `tests/` — os testes de endpoint

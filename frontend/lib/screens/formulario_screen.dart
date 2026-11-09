@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/atividade.dart';
 import '../services/atividade_service.dart';
+import '../widgets/aviso.dart';
 import 'atividades_screen.dart';
 
 class FormularioScreen extends StatefulWidget {
@@ -89,13 +90,16 @@ class _FormularioScreenState extends State<FormularioScreen> {
         );
       }
     } on ErroDeAtividades catch (e) {
+      if (!mounted) return;
       setState(() {
         salvando = false;
         erro = '$e';
       });
+      avisar(context, 'Não deu para salvar', erro: true);
       return;
     }
     if (!mounted) return;
+    avisar(context, 'Atividade salva');
     Navigator.pop(context, true);
   }
 

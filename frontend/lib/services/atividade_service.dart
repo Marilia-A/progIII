@@ -19,9 +19,9 @@ class AtividadeService {
 
   static const _semApi = 'Não consegui falar com a API. O uvicorn está rodando?';
 
-  Future<List<Atividade>> listar() async {
+  Future<List<Atividade>> listar({String busca = ''}) async {
     try {
-      return await repositorio.listar(sessao.token!);
+      return await repositorio.listar(sessao.token!, busca: busca);
     } on RecusaDaApi catch (e) {
       throw ErroDeAtividades(e.mensagem);
     } on Exception {
