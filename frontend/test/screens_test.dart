@@ -124,14 +124,20 @@ http.Client apiDeAtividades(int status, Object corpo) {
   });
 }
 
+// O último endereço que o acervo de mentira recebeu: o teste da busca confere
+// o ?titulo= que o app mandou.
+Uri? ultimoEndereco;
+
 // Acervo de mentira que guarda o que recebe: título repetido (RN01) e
-// atividade concluída (RN03) voltam 409, como na API de verdade.
+// atividade concluída (RN03) voltam 409, como na API de verdade. Como a API,
+// o GET /atividades/?titulo=... devolve só as que têm aquele pedaço no título.
 http.Client acervoDeMentira() {
   final List<Map<String, dynamic>> acervo = [
     for (final a in duasAtividades) Map<String, dynamic>.from(a),
   ];
   return MockClient((pedido) async {
     pedidos++;
+    ultimoEndereco = pedido.url;
     final id = int.tryParse(pedido.url.pathSegments.last);
     if (pedido.method == 'POST' || pedido.method == 'PATCH') {
       final dados = jsonDecode(pedido.body);
@@ -158,7 +164,12 @@ http.Client acervoDeMentira() {
       }
     }
     if (id == null) {
-      return http.Response(jsonEncode(acervo), 200);
+      final busca = (pedido.url.queryParameters['titulo'] ?? '').toLowerCase();
+      final achadas = [
+        for (final a in acervo)
+          if ('${a['titulo']}'.toLowerCase().contains(busca)) a,
+      ];
+      return http.Response(jsonEncode(achadas), 200);
     }
     for (final a in acervo) {
       if (a['id'] == id) {
@@ -245,6 +256,13 @@ Future<void> excluirRespondendo(WidgetTester tester, String resposta) async {
   await tester.tap(find.text('Excluir'));
   await tester.pumpAndSettle();
   await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.text(resposta)));
+  await tester.pumpAndSettle();
+}
+
+// Na lista aberta, digita no campo de busca e aperta o Enter.
+Future<void> buscar(WidgetTester tester, String texto) async {
+  await tester.enterText(find.byType(TextField).first, texto);
+  await tester.testTextInput.receiveAction(TextInputAction.search);
   await tester.pumpAndSettle();
 }
 
@@ -561,6 +579,73 @@ void main() {
     expect(find.byType(FormularioScreen), findsOneWidget);
     expect(find.text('Nova atividade'), findsNothing);
     expect(find.text('Montar o circuito do LED'), findsOneWidget);
+  });
+
+  // A busca e os avisos.
+  testWidgets('a busca pede à API só as atividades com o texto no título', (tester) async {
+    await abrirAsAtividades(tester, acervoDeMentira());
+    await buscar(tester, 'led');
+    expect(ultimoEndereco!.queryParameters['titulo'], 'led');
+    expect(find.text('Montar o circuito do LED'), findsOneWidget);
+    expect(find.text('Programar o pisca-pisca'), findsNothing);
+    expect(find.byType(ListTile), findsOneWidget);
+  });
+
+  testWidgets('a busca sem resultado diz o que foi procurado', (tester) async {
+    await abrirAsAtividades(tester, acervoDeMentira());
+    await buscar(tester, 'xyz');
+    expect(find.text('Nenhuma atividade com "xyz" no título.'), findsOneWidget);
+    expect(find.byType(ListTile), findsNothing);
+  });
+
+  testWidgets('a busca vazia volta a lista inteira, sem o ?titulo=', (tester) async {
+    await abrirAsAtividades(tester, acervoDeMentira());
+    await buscar(tester, 'led');
+    await buscar(tester, '');
+    expect(ultimoEndereco!.hasQuery, isFalse);
+    expect(find.byType(ListTile), findsNWidgets(2));
+  });
+
+  testWidgets('depois de salvar, a lista pede de novo com a mesma busca', (tester) async {
+    await abrirAsAtividades(tester, acervoDeMentira());
+    await buscar(tester, 'led');
+    await preencherOFormulario(tester, 'Trocar o LED queimado', 'Hardware');
+    await tester.tap(find.text('Salvar'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ListTile), findsNWidgets(2));
+    expect(find.text('Programar o pisca-pisca'), findsNothing);
+  });
+
+  testWidgets('salvar mostra o aviso verde: Atividade salva, já na lista', (tester) async {
+    await abrirAsAtividades(tester, acervoDeMentira());
+    await preencherOFormulario(tester, 'Soldar os jumpers', 'Montagem');
+    await tester.tap(find.text('Salvar'));
+    await tester.pumpAndSettle();
+    expect(find.byType(FormularioScreen), findsNothing);
+    expect(find.widgetWithText(SnackBar, 'Atividade salva'), findsOneWidget);
+  });
+
+  testWidgets('a recusa da API mostra o aviso vermelho, e a frase fica no formulário', (tester) async {
+    await abrirAsAtividades(tester, acervoDeMentira());
+    await preencherOFormulario(tester, 'Montar o circuito do LED', 'Hardware');
+    await tester.tap(find.text('Salvar'));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(SnackBar, 'Não deu para salvar'), findsOneWidget);
+    expect(find.text('Ja existe uma atividade com o titulo Montar o circuito do LED'), findsOneWidget);
+    expect(find.byType(FormularioScreen), findsOneWidget);
+  });
+
+  testWidgets('excluir mostra o aviso: Atividade excluída; a concluída, Não deu para excluir', (tester) async {
+    await abrirAsAtividades(tester, acervoDeMentira());
+    await tester.tap(find.text('Montar o circuito do LED'));
+    await tester.pumpAndSettle();
+    await excluirRespondendo(tester, 'Excluir');
+    expect(find.widgetWithText(SnackBar, 'Atividade excluída'), findsOneWidget);
+    await tester.tap(find.text('Programar o pisca-pisca'));
+    await tester.pumpAndSettle();
+    await excluirRespondendo(tester, 'Excluir');
+    expect(find.widgetWithText(SnackBar, 'Não deu para excluir'), findsOneWidget);
+    expect(find.text('Atividade 2 ja foi concluida e nao pode ser apagada'), findsOneWidget);
   });
 
   test('service recusa campos vazios sem chamar a API', () async {

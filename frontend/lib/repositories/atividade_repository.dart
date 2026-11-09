@@ -13,9 +13,14 @@ class AtividadeRepository {
         'Content-Type': 'application/json',
       };
 
-  Future<List<Atividade>> listar(String token) async {
+  // Com uma busca, o endereço ganha o ?titulo=, e quem filtra é a API.
+  Future<List<Atividade>> listar(String token, {String busca = ''}) async {
+    var endereco = Uri.parse('$enderecoDaApi/atividades/');
+    if (busca.isNotEmpty) {
+      endereco = endereco.replace(queryParameters: {'titulo': busca});
+    }
     final resposta = await cliente.get(
-      Uri.parse('$enderecoDaApi/atividades/'),
+      endereco,
       headers: {'Authorization': 'Bearer $token'},
     );
     if (resposta.statusCode != 200) {

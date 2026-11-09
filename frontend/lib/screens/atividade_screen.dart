@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/atividade.dart';
 import '../routes.dart';
 import '../services/atividade_service.dart';
+import '../widgets/aviso.dart';
 import 'atividades_screen.dart';
 
 class AtividadeScreen extends StatefulWidget {
@@ -69,12 +70,15 @@ class _AtividadeScreenState extends State<AtividadeScreen> {
     try {
       await context.read<AtividadeService>().excluir(atividade.id);
     } on ErroDeAtividades catch (e) {
+      if (!mounted) return;
       setState(() {
         erro = '$e';
       });
+      avisar(context, 'Não deu para excluir', erro: true);
       return;
     }
     if (!mounted) return;
+    avisar(context, 'Atividade excluída');
     Navigator.pop(context, true);
   }
 
