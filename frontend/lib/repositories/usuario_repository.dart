@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/usuario.dart';
 
-const enderecoDaApi = 'http://127.0.0.1:8000';
+// Onde a API roda. Na nuvem, o endereço vem de fora, na hora de construir o app
+// (--dart-define=API_URL=...); sem ele, o uvicorn, na porta de sempre.
+const enderecoDaApi = String.fromEnvironment('API_URL', defaultValue: 'http://127.0.0.1:8000');
 
 class RecusaDaApi implements Exception {
   RecusaDaApi(this.status, this.mensagem);

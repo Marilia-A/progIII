@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
@@ -13,6 +15,9 @@ app = FastAPI(title="Checklist de Robotica", version="0.5.0")
 
 app.add_middleware(
     CORSMiddleware,
+    # Na nuvem, o endereço do app (Static Site) vem da variável ENDERECO_DO_APP;
+    # na sua máquina ela não existe, e valem só as portas do localhost.
+    allow_origins=[os.getenv("ENDERECO_DO_APP", "")],
     allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_methods=["*"],
     allow_headers=["*"],
