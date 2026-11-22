@@ -2,6 +2,26 @@
 
 Projeto da disciplina Programação para Web III: uma API FastAPI (`backend/`) e um app Flutter (`frontend/`) para um checklist de atividades de robótica educacional.
 
+## No ar
+- O app: https://SEU-APP.onrender.com
+- A API: https://SUA-API.onrender.com/docs
+
+A API dorme depois de 15 minutos sem uso: o primeiro acesso leva cerca de 1 minuto.
+
+### Como está no ar (Render)
+São três serviços, criados nesta ordem, porque cada um precisa do endereço do anterior:
+
+| A peça | No Render | Root Directory | As variáveis |
+|---|---|---|---|
+| O banco | Postgres (Free) | — | nenhuma |
+| A API | Web Service, Language: Docker | `backend` | `DATABASE_URL` (o endereço interno do banco, com o começo trocado para `postgresql+psycopg://`), `SECRET_KEY` (Generate) e `ENDERECO_DO_APP` (o endereço do app, sem barra no fim) |
+| O app | Static Site | `frontend` | `API_URL` (o endereço da API, sem barra no fim) |
+
+- **A API** é construída pelo `backend/Dockerfile`: Python 3.13, os pacotes do Poetry sem os de teste e, ao ligar, `alembic upgrade head` (cria ou atualiza as tabelas) e o uvicorn na porta que o Render indica (`PORT`). O `backend/.dockerignore` deixa de fora da imagem o `.env`, os bancos locais e os testes.
+- **O app** é construído com o Build Command `git clone https://github.com/flutter/flutter.git -b stable --depth 1 sdk && sdk/bin/flutter build web --dart-define=API_URL=$API_URL` e o Publish Directory `build/web`. O endereço da API vem do `--dart-define`: o `String.fromEnvironment('API_URL')` do `usuario_repository.dart`; sem ele, o app usa `http://127.0.0.1:8000`, como sempre.
+- **O CORS**: a API aceita as portas do localhost e o endereço que estiver em `ENDERECO_DO_APP`. Na sua máquina essa variável não existe, e nada muda.
+- **Nenhum segredo no Git nem na imagem**: a `SECRET_KEY` e a senha do banco ficam só na tela Environment de cada serviço.
+
 ## A API (backend)
 
 Detalhes completos em [`backend/README.md`](backend/README.md).
