@@ -3,7 +3,7 @@
 Projeto da disciplina Programação para Web III: uma API FastAPI (`backend/`) e um app Flutter (`frontend/`) para um checklist de atividades de robótica educacional.
 
 ## No ar
-- O app: https://SEU-APP.onrender.com
+- O app: https://progiii-app.onrender.com
 - A API: https://progiii.onrender.com/docs
 
 A API dorme depois de 15 minutos sem uso: o primeiro acesso leva cerca de 1 minuto.
