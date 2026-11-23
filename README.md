@@ -4,7 +4,7 @@ Projeto da disciplina Programação para Web III: uma API FastAPI (`backend/`) e
 
 ## No ar
 - O app: https://SEU-APP.onrender.com
-- A API: https://SUA-API.onrender.com/docs
+- A API: https://progiii.onrender.com/docs
 
 A API dorme depois de 15 minutos sem uso: o primeiro acesso leva cerca de 1 minuto.
 
