@@ -92,23 +92,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Text(carregando ? 'Entrando...' : 'Entrar'),
                 ),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () {},
-                        child: const Text('Esqueci a senha'),
-                      ),
-                    ),
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, AppRoutes.cadastro);
-                        },
-                        child: const Text('Criar uma conta'),
-                      ),
-                    ),
-                  ],
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, AppRoutes.cadastro);
+                  },
+                  child: const Text('Criar uma conta'),
                 ),
               ],
             ),
