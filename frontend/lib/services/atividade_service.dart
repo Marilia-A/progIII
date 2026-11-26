@@ -83,6 +83,16 @@ class AtividadeService {
     }
   }
 
+  Future<Atividade> concluir(int id) async {
+    try {
+      return await repositorio.concluir(sessao.token!, id);
+    } on RecusaDaApi catch (e) {
+      throw ErroDeAtividades(e.mensagem);
+    } on Exception {
+      throw ErroDeAtividades(_semApi);
+    }
+  }
+
   Future<void> excluir(int id) async {
     try {
       await repositorio.excluir(sessao.token!, id);

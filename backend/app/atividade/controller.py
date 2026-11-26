@@ -45,6 +45,11 @@ def atualizar(
     return service.atualizar(db, usuario, atividade_id, dados.model_dump(exclude_unset=True))
 
 
+@router.patch("/{atividade_id}/concluir", response_model=AtividadePublico)
+def concluir(atividade_id: int, usuario: Usuario = Depends(get_current_user), db: Session = Depends(get_db)):
+    return service.concluir(db, usuario, atividade_id)
+
+
 @router.delete("/{atividade_id}", status_code=204)
 def apagar(atividade_id: int, usuario: Usuario = Depends(get_current_user), db: Session = Depends(get_db)):
     service.apagar(db, usuario, atividade_id)

@@ -84,3 +84,13 @@ def test_senha_errada_devolve_401(cliente):
     dados = {"username": "ana@ifg.edu.br", "password": "senha-errada"}
     resposta = cliente.post("/usuarios/login", data=dados)
     assert resposta.status_code == 401
+
+
+def test_concluir_marca_e_depois_nao_deixa_excluir(cliente):
+    ana = entrar(cliente, "ana@ifg.edu.br")
+    atividade = cliente.post("/atividades/", json=ATIVIDADE, headers=ana).json()
+    resposta = cliente.patch(f"/atividades/{atividade['id']}/concluir", headers=ana)
+    assert resposta.status_code == 200
+    assert resposta.json()["concluida"] is True
+    resposta = cliente.delete(f"/atividades/{atividade['id']}", headers=ana)
+    assert resposta.status_code == 409

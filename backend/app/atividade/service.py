@@ -38,6 +38,11 @@ def atualizar(db, usuario, atividade_id, mudancas):
     return repository.atualizar(db, atividade, mudancas)
 
 
+def concluir(db, usuario, atividade_id):
+    atividade = buscar(db, usuario, atividade_id)
+    return repository.atualizar(db, atividade, {"concluida": True})
+
+
 def apagar(db, usuario, atividade_id):
     atividade = buscar(db, usuario, atividade_id)
     if atividade.concluida:

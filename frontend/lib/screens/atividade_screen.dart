@@ -44,6 +44,19 @@ class _AtividadeScreenState extends State<AtividadeScreen> {
     }
   }
 
+  Future<void> concluir(Atividade atividade) async {
+    try {
+      await context.read<AtividadeService>().concluir(atividade.id);
+    } on ErroDeAtividades catch (e) {
+      if (!mounted) return;
+      avisar(context, '$e', erro: true);
+      return;
+    }
+    if (!mounted) return;
+    avisar(context, 'Atividade concluída');
+    Navigator.pop(context, true);
+  }
+
   Future<void> excluir(Atividade atividade) async {
     final certeza = await showDialog<bool>(
       context: context,
@@ -148,6 +161,17 @@ class _AtividadeScreenState extends State<AtividadeScreen> {
                 subtitle: Text(atividade.concluida ? 'Concluída' : 'Pendente'),
               ),
               const SizedBox(height: 16),
+              if (!atividade.concluida)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Center(
+                    child: FilledButton.icon(
+                      onPressed: () => concluir(atividade),
+                      icon: const Icon(Icons.check),
+                      label: const Text('Concluir'),
+                    ),
+                  ),
+                ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

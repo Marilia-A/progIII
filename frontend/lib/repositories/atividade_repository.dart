@@ -78,6 +78,18 @@ class AtividadeRepository {
     return Atividade.fromJson(jsonDecode(utf8.decode(resposta.bodyBytes)));
   }
 
+  // A RN02 barra o concluida no PATCH comum; concluir tem rota própria.
+  Future<Atividade> concluir(String token, int id) async {
+    final resposta = await cliente.patch(
+      Uri.parse('$enderecoDaApi/atividades/$id/concluir'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (resposta.statusCode != 200) {
+      throw RecusaDaApi(resposta.statusCode, _frase(resposta));
+    }
+    return Atividade.fromJson(jsonDecode(utf8.decode(resposta.bodyBytes)));
+  }
+
   Future<void> excluir(String token, int id) async {
     final resposta = await cliente.delete(
       Uri.parse('$enderecoDaApi/atividades/$id'),
