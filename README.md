@@ -3,8 +3,8 @@
 Projeto da disciplina Programação para Web III: uma API FastAPI (`backend/`) e um app Flutter (`frontend/`) para um checklist de atividades de robótica educacional.
 
 ## No ar
-- O app: https://SEU-APP.onrender.com
-- A API: https://SUA-API.onrender.com/docs
+- O app: https://progiii-app.onrender.com
+- A API: https://progiii.onrender.com/docs
 
 A API dorme depois de 15 minutos sem uso: o primeiro acesso leva cerca de 1 minuto.
 
@@ -104,6 +104,24 @@ Na pasta `frontend/`:
 flutter test
 ```
 São 53 testes de widget e de unidade, com uma API e um aparelho de mentira: login, cadastro, guarda de rotas, menu, sessão guardada, os quatro estados da lista, o detalhe, o formulário (criar, editar, validação e 409), o excluir, a busca, os avisos, e os arquivos `test/formulario_test.dart` (as frases do `validator`) e `test/lista_test.dart` (a lista com a resposta da API).
+
+## Versões
+
+Cada tag marca o merge na `main` que fechou uma etapa da disciplina.
+
+| Tag | Conteúdo |
+|---|---|
+| `v0.1` | Encontros 1 e 2: ficha do projeto, Poetry, FastAPI e o primeiro endpoint |
+| `v0.2` | Encontros 3 a 5: CRUD com schemas, PostgreSQL atrás do repository e regras de negócio no service |
+| `v0.3` | Encontro 6: cadastro com bcrypt, login com JWT e rotas protegidas |
+| `v1.0` | Checkpoint 1 (encontro 7): API completa, com dono das atividades, busca e filtro, migrações Alembic e validação em português |
+| `v1.1` | Encontro 8: o app Flutter nasce, com o login de verdade em camadas e o CORS |
+| `v1.2` | Encontro 9: rotas nomeadas, guarda de rotas, sessão no Provider, menu lateral e perfil |
+| `v1.3` | Encontro 10: cadastro pelo app e sessão guardada no aparelho |
+| `v1.4` | Encontro 11: listagem e detalhe com dados reais |
+| `v1.5` | Encontro 12: criar, editar e excluir pelo app |
+| `v2.0` | Checkpoint 2 e encontro 14: busca no app, avisos, checklist das seis funcionalidades e testes automatizados |
+| `v2.1` | Encontro 15: Dockerfile, CORS e endereço da API configuráveis para a nuvem |
 
 ## Regras de negócio
 Em [`docs/regras-de-negocio.md`](docs/regras-de-negocio.md) — RN01 a RN05.
