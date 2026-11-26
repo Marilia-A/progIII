@@ -23,14 +23,15 @@ poetry run uvicorn app.main:app --reload
 Abra http://127.0.0.1:8000/docs
 
 ## CORS
-A API aceita pedidos de `localhost` e `127.0.0.1` em qualquer porta, para o app Flutter no navegador conseguir falar com ela.
+A API aceita pedidos de `localhost` e `127.0.0.1` em qualquer porta, para o app Flutter no navegador conseguir falar com ela. Na nuvem, aceita também o endereço da variável `ENDERECO_DO_APP`.
 
 ## O que testar no /docs
 1. `POST /usuarios/` cria a conta; **Authorize** com e-mail e senha
 2. `POST /atividades/` → 201 com `dono_id` preenchido pelo token
 3. `GET /atividades/?titulo=...&categoria=...&concluida=...` → busca e filtros
 4. Título com 1 caractere → 422 com mensagem em português
-5. Outro usuário: `GET /atividades/` → `[]`; `GET /atividades/1` → 404
+5. `PATCH /atividades/{id}` com `concluida` → 409 (RN02); `PATCH /atividades/{id}/concluir` → 200, e depois `DELETE` → 409 (RN03)
+6. Outro usuário: `GET /atividades/` → `[]`; `GET /atividades/1` → 404
 
 ## Testes
 Não precisa do uvicorn nem do `.env`:

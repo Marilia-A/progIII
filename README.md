@@ -74,6 +74,8 @@ Tocar numa atividade abre o detalhe pela rota `/atividade`, com o id nos `argume
 ### Criar, editar e excluir pelo app
 O app cria, edita e exclui atividades pelas camadas (tela, `AtividadeService`, `AtividadeRepository`), com o token no cabeçalho: `POST /atividades/`, `PATCH /atividades/{id}` e `DELETE /atividades/{id}`. Um formulário só (`FormularioScreen`) serve para criar (aberto pelo + da lista, vazio) e para editar (aberto pelo Editar do detalhe, já preenchido), com título, descrição, categoria (dropdown) e data prevista (seletor de data). O campo `concluida` não vai no formulário por causa da RN02.
 
+Concluir tem rota própria: o botão **Concluir** do detalhe (só aparece na atividade pendente) chama `PATCH /atividades/{id}/concluir`. Depois de concluída, a atividade não pode mais ser excluída (RN03).
+
 A validação acontece nas duas pontas: o `validator` de cada campo antes de enviar (título obrigatório, categoria escolhida, descrição até 500 caracteres), e a API, que confere tudo de novo e recusa com 422 (campo inválido) ou 409 (RN01, título repetido; RN03, atividade concluída não pode ser excluída). A frase da API aparece em vermelho, e a tela fica aberta. Excluir pede confirmação num diálogo (`showDialog`). Depois de cada operação, a tela fecha com `true`, e a lista pede as atividades de novo.
 
 ### Busca e avisos
@@ -83,7 +85,7 @@ Toda ação que muda dados mostra um aviso (`SnackBar`, em `lib/widgets/aviso.da
 
 ## Checklist das seis funcionalidades mínimas
 - [x] **Autenticação** — login e cadastro (`login_screen.dart`, `cadastro_screen.dart`; API `/usuarios/`, `/usuarios/login`), senha com bcrypt e token JWT; sem sessão, as telas protegidas mostram o login. *Prova:* sair, tentar abrir a lista e entrar de novo.
-- [x] **CRUD** — o + da lista cria, o detalhe edita e exclui (`formulario_screen.dart`, `atividade_screen.dart`; API `POST`, `GET`, `PATCH` e `DELETE /atividades/`). *Prova:* criar, editar e excluir uma atividade.
+- [x] **CRUD** — o + da lista cria, o detalhe edita e exclui (`formulario_screen.dart`, `atividade_screen.dart`; API `POST`, `GET`, `PATCH` e `DELETE /atividades/`), e o Concluir do detalhe usa `PATCH /atividades/{id}/concluir`. *Prova:* criar, editar, concluir e excluir uma atividade.
 - [x] **Relacionamento com o usuário** — o `dono_id` vem do token, e cada um vê só as suas (RN05). *Prova:* entrar com outra conta: a lista é outra.
 - [x] **Validação nas duas pontas** — o `validator` no formulário (título obrigatório, categoria escolhida) e a API, que recusa com 422 (campo inválido) e 409 (RN01 título repetido, RN03 atividade concluída). *Prova:* salvar com o título vazio, e salvar um título que já existe.
 - [x] **Busca/filtro** — o campo de busca da lista, pelo `?titulo=` da API. *Prova:* uma busca que acha e uma que não acha.
@@ -97,7 +99,7 @@ Na pasta `backend/`:
 poetry install
 poetry run pytest
 ```
-São 10 testes de endpoint (pytest + `TestClient`), num banco SQLite só do teste (`teste.db`, criado e apagado a cada teste): criar (201), sem token (401), um usuário não vê a atividade do outro, editar, excluir, 404, título repetido (409), `concluida` pelo PATCH (409), a busca e a senha errada (401).
+São 11 testes de endpoint (pytest + `TestClient`), num banco SQLite só do teste (`teste.db`, criado e apagado a cada teste): criar (201), sem token (401), um usuário não vê a atividade do outro, editar, excluir, 404, título repetido (409), `concluida` pelo PATCH (409), a busca, a senha errada (401) e concluir (200, e depois excluir dá 409 pela RN03).
 
 Na pasta `frontend/`:
 ```
@@ -122,6 +124,7 @@ Cada tag marca o merge na `main` que fechou uma etapa da disciplina.
 | `v1.5` | Encontro 12: criar, editar e excluir pelo app |
 | `v2.0` | Checkpoint 2 e encontro 14: busca no app, avisos, checklist das seis funcionalidades e testes automatizados |
 | `v2.1` | Encontro 15: Dockerfile, CORS e endereço da API configuráveis para a nuvem |
+| `v2.2` | Concluir atividade pelo app, com rota própria (`PATCH /atividades/{id}/concluir`) |
 
 ## Regras de negócio
 Em [`docs/regras-de-negocio.md`](docs/regras-de-negocio.md) — RN01 a RN05.
